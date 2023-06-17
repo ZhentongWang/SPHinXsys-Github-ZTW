@@ -274,26 +274,26 @@ namespace SPH
                         pos_[ghost_particle_index] = ghost_particle_position;
                         mutex_create_ghost_particle_.unlock();
 
-                        ////check if it is available
-                        //all_needed_data_from_mesh_file_.resize(ghost_particle_index);
-                        //
-                        //std::vector<std::vector<size_t>> new_element;
+                        //check if it is available
+                        all_needed_data_from_mesh_file_.resize(ghost_particle_index);
+                        
+                        std::vector<std::vector<size_t>> new_element;
 
-                        //// Add (gohost particle index,boundary_type,ghost_particle_index,ghost_particle_index) to the new element
-                        //std::vector<size_t> sub_element1 = {ghost_particle_index, boundary_type, ghost_particle_index, ghost_particle_index};
-                        //new_element.push_back(sub_element1);
+                        // Add (gohost particle index,boundary_type,ghost_particle_index,ghost_particle_index) to the new element
+                        std::vector<size_t> sub_element1 = {index_i+1, boundary_type, 0, 0};
+                        new_element.push_back(sub_element1);
 
-                        //// Add an empty sub-element to the new element
-                        //std::vector<size_t> sub_element2= {ghost_particle_index, boundary_type, ghost_particle_index, ghost_particle_index};
-                        //new_element.push_back(sub_element2);
+                        // Add an empty sub-element to the new element
+                        std::vector<size_t> sub_element2= {index_i+1, boundary_type, 0, 0};
+                        new_element.push_back(sub_element2);
 
-                        //// Add an empty sub-element to the new element
-                        //std::vector<size_t> sub_element3= {ghost_particle_index, boundary_type, ghost_particle_index, ghost_particle_index};
-                        //new_element.push_back(sub_element3);
+                        // Add an empty sub-element to the new element
+                        std::vector<size_t> sub_element3= {index_i+1, boundary_type, 0, 0};
+                        new_element.push_back(sub_element3);
 
-                        //// Add the new element to all_needed_data_from_mesh_file_
-                        //all_needed_data_from_mesh_file_.push_back(new_element);
-                        ////all_needed_data_from_mesh_file_[ghost_particle_index][0][0].push_back(size_t(0);
+                        // Add the new element to all_needed_data_from_mesh_file_
+                        all_needed_data_from_mesh_file_.push_back(new_element);
+                        //all_needed_data_from_mesh_file_[ghost_particle_index][0][0].push_back(size_t(0);
 
                     }
                 }

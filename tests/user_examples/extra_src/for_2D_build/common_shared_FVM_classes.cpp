@@ -452,7 +452,7 @@ namespace SPH
 	{
 		parallel_for
 		(
-            IndexRange(0, base_particles_.total_real_particles_),
+            IndexRange(0, base_particles_.total_real_particles_ + base_particles_.total_ghost_particles_),
             [&](const IndexRange &r)
             {
                 for (size_t num = r.begin(); num != r.end(); ++num)
@@ -474,7 +474,7 @@ namespace SPH
 	//=================================================================================================//
     void BaseInnerRelationInFVM::resizeConfiguration() 
 	{
-        size_t updated_size = base_particles_.real_particles_bound_;
+        size_t updated_size = base_particles_.real_particles_bound_+ base_particles_.total_ghost_particles_;
         inner_configuration_in_FVM_.resize(updated_size, NeighborhoodInFVM());
 	}
 	//=================================================================================================//
@@ -521,7 +521,7 @@ namespace SPH
         ParticleConfigurationInFVM &particle_configuration, GetParticleIndex &get_particle_index, GetNeighborRelation &get_neighbor_relation)
 	{
 		parallel_for(
-                IndexRange(0, base_particles_.total_real_particles_),
+                IndexRange(0, base_particles_.total_real_particles_+ base_particles_.total_ghost_particles_),
                 [&](const IndexRange &r)
             {
                 StdLargeVec<Vecd> &pos_n = source_particles.pos_;

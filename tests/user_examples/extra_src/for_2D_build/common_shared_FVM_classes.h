@@ -209,5 +209,97 @@ namespace SPH
         ParticleConfigurationInFVM &inner_configuration_in_FVM_;
     };
 
+
+    /**
+	 * @class BaseGhostCreation
+	 * @brief Base class for the ghost particle
+	 */
+	class GhostCreationFromMesh : public LocalDynamics, public GeneralDataDelegateSimple
+	{
+	public:
+		GhostCreationFromMesh(RealBody &real_body, vector<vector<vector<size_t>>>& data_inpute, vector<vector<Real>> nodes_coordinates)
+              : LocalDynamics(real_body), GeneralDataDelegateSimple(real_body),
+			all_needed_data_from_mesh_file_(data_inpute), nodes_coordinates_(nodes_coordinates),
+            pos_(particles_->pos_), Vol_(particles_->Vol_), total_ghost_particles_(particles_->total_ghost_particles_),
+            real_particles_bound_(particles_->real_particles_bound_)
+        {
+            ghost_particles_.resize(1);
+            addGhostParticleAndSetInConfiguration();
+        }
+		virtual ~GhostCreationFromMesh(){};
+	protected:
+        std::mutex mutex_create_ghost_particle_; /**< mutex exclusion for memory conflict */
+        vector<vector<vector<size_t>>>& all_needed_data_from_mesh_file_;
+        vector<vector<Real>> nodes_coordinates_;
+        StdLargeVec<Vecd> &pos_;
+        StdVec<IndexVector> ghost_particles_;
+        StdLargeVec<Real> &Vol_;
+        size_t &total_ghost_particles_;
+        size_t &real_particles_bound_;
+
+        void addGhostParticleAndSetInConfiguration()
+        {
+            for (size_t i = 0; i != ghost_particles_.size(); ++i)
+			ghost_particles_[i].clear();
+
+            for(size_t index_i = 0; index_i != real_particles_bound_; ++index_i)
+            {
+                for (size_t neighbor_index = 0; neighbor_index != all_needed_data_from_mesh_file_[index_i].size(); ++neighbor_index)
+                {
+                    size_t index_check2 = index_i;
+                    size_t boundary_type = all_needed_data_from_mesh_file_[index_i][neighbor_index][1];
+                    if (all_needed_data_from_mesh_file_[index_i][neighbor_index][1] != 2)
+                    {
+                        size_t index_check = index_i;
+                        if (index_check > 3700)
+                        {
+                            Real a = 1.0;
+                        }
+                        mutex_create_ghost_particle_.lock();
+                        size_t check_real = real_particles_bound_;
+                        size_t ghost_particle_index = particles_->insertAGhostParticle(index_i);
+                        //size_t ghost_particle_index = finial_real_particle_index ;
+                       /* total_ghost_particles_ += 1;
+		                size_t expected_size = all_real_particle_number + total_ghost_particles_;
+		                size_t ghost_particle_index = expected_size - 1;*/
+                        size_t node1_index=all_needed_data_from_mesh_file_[index_i][neighbor_index][2];
+                        size_t node2_index=all_needed_data_from_mesh_file_[index_i][neighbor_index][3];
+                        Vecd node1_position = Vecd(nodes_coordinates_[node1_index][0], nodes_coordinates_[node1_index][1]);
+                        Vecd node2_position = Vecd(nodes_coordinates_[node2_index][0], nodes_coordinates_[node2_index][1]);
+                        Vecd ghost_particle_position = 0.5 * (node1_position + node2_position);
+
+                        all_needed_data_from_mesh_file_[index_i][neighbor_index][0]=ghost_particle_index +1;
+                        ghost_particles_[0].push_back(ghost_particle_index);
+                        size_t position_number=pos_.size();
+                        pos_[ghost_particle_index] = ghost_particle_position;
+                        mutex_create_ghost_particle_.unlock();
+
+                        ////check if it is available
+                        //all_needed_data_from_mesh_file_.resize(ghost_particle_index);
+                        //
+                        //std::vector<std::vector<size_t>> new_element;
+
+                        //// Add (gohost particle index,boundary_type,ghost_particle_index,ghost_particle_index) to the new element
+                        //std::vector<size_t> sub_element1 = {ghost_particle_index, boundary_type, ghost_particle_index, ghost_particle_index};
+                        //new_element.push_back(sub_element1);
+
+                        //// Add an empty sub-element to the new element
+                        //std::vector<size_t> sub_element2= {ghost_particle_index, boundary_type, ghost_particle_index, ghost_particle_index};
+                        //new_element.push_back(sub_element2);
+
+                        //// Add an empty sub-element to the new element
+                        //std::vector<size_t> sub_element3= {ghost_particle_index, boundary_type, ghost_particle_index, ghost_particle_index};
+                        //new_element.push_back(sub_element3);
+
+                        //// Add the new element to all_needed_data_from_mesh_file_
+                        //all_needed_data_from_mesh_file_.push_back(new_element);
+                        ////all_needed_data_from_mesh_file_[ghost_particle_index][0][0].push_back(size_t(0);
+
+                    }
+                }
+            }
+        };
+	};
+
 }
 #endif // COMMON_SHARED_FVM_CLASSES_H

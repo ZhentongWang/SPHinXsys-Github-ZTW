@@ -28,6 +28,7 @@ int main(int ac, char *av[])
 	wave_block.defineParticlesAndMaterial<BaseParticles, CompressibleFluid>(rho0_another, heat_capacity_ratio);
 	wave_block.generateParticles<ParticleGeneratorInFVM>(read_mesh_data.elements_center_coordinates_, read_mesh_data.elements_volumes_);
 	wave_block.addBodyStateForRecording<Real>("Density");
+	GhostCreationFromMesh ghost_creation_and_set_configuration(wave_block, read_mesh_data.cell_lists_, read_mesh_data.point_coordinates_2D_);
 	//----------------------------------------------------------------------
 	//	Define body relation map.
 	//----------------------------------------------------------------------

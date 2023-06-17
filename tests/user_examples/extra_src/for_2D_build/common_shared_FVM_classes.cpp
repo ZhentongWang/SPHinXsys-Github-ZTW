@@ -400,6 +400,7 @@ namespace SPH
 			if (text_line.find("Zone Sections", 0) != string::npos) break;
 			if (text_line.find(")") != string::npos) continue;
 		}
+		cell_lists_.erase(cell_lists_.begin());
 	}
     //=================================================================================================//
     void readMeshFile::getElementCenterCoordinates()
@@ -433,6 +434,8 @@ namespace SPH
                 pow(half_perimeter * (half_perimeter - first_side_length) * (half_perimeter - second_side_length) * (half_perimeter - third_side_length), 0.5);
             elements_volumes_[element] = element_volume;
         }
+		elements_volumes_.erase(elements_volumes_.begin());
+		elements_center_coordinates_.erase(elements_center_coordinates_.begin());
     }
     //=================================================================================================//
     void NeighborhoodInFVM::removeANeighbor(size_t neighbor_n) 
@@ -480,7 +483,7 @@ namespace SPH
 	//=================================================================================================//
 	void ParticleGeneratorInFVM::initializeGeometricVariables()
 	{
-        for (size_t particle_index = 1; particle_index != elements_center_coordinates_.size(); ++particle_index)
+        for (size_t particle_index = 0; particle_index != elements_center_coordinates_.size(); ++particle_index)
         {
             initializePositionAndVolumetricMeasure(elements_center_coordinates_[particle_index], elements_volumes_[particle_index]);
         }
@@ -514,7 +517,7 @@ namespace SPH
             : BaseInnerRelationInFVM(real_body, data_inpute, nodes_coordinates), get_inner_neighbor_(&real_body){};
 	//=================================================================================================//
 	template <typename GetParticleIndex, typename GetNeighborRelation>
-	void InnerRelationInFVM::searchNeighborsByParticles(size_t total_real_particles, BaseParticles &source_particles,
+	void InnerRelationInFVM::searchNeighborsByParticles(size_t total_particles, BaseParticles &source_particles,
         ParticleConfigurationInFVM &particle_configuration, GetParticleIndex &get_particle_index, GetNeighborRelation &get_neighbor_relation)
 	{
 		parallel_for(
@@ -530,12 +533,12 @@ namespace SPH
                     Real &Vol_i = Vol_n[index_i];
 
                     NeighborhoodInFVM &neighborhood = particle_configuration[index_i];
-                    for (std::vector<std::vector<long unsigned int>>::size_type neighbor = 0; neighbor != all_needed_data_from_mesh_file_[index_i + 1].size(); ++neighbor)
+                    for (std::vector<std::vector<long unsigned int>>::size_type neighbor = 0; neighbor != all_needed_data_from_mesh_file_[index_i].size(); ++neighbor)
                     {
-                        size_t index_j = all_needed_data_from_mesh_file_[index_i + 1][neighbor][0] - 1;
-                        size_t boundary_type = all_needed_data_from_mesh_file_[index_i + 1][neighbor][1];
-                        size_t interface_node1_index = all_needed_data_from_mesh_file_[index_i + 1][neighbor][2];
-                        size_t interface_node2_index = all_needed_data_from_mesh_file_[index_i + 1][neighbor][3];
+                        size_t index_j = all_needed_data_from_mesh_file_[index_i][neighbor][0] - 1;
+                        size_t boundary_type = all_needed_data_from_mesh_file_[index_i][neighbor][1];
+                        size_t interface_node1_index = all_needed_data_from_mesh_file_[index_i][neighbor][2];
+                        size_t interface_node2_index = all_needed_data_from_mesh_file_[index_i][neighbor][3];
                         Vecd node1_position = Vecd(nodes_coordinates_[interface_node1_index][0], nodes_coordinates_[interface_node1_index][1]);
                         Vecd node2_position = Vecd(nodes_coordinates_[interface_node2_index][0], nodes_coordinates_[interface_node2_index][1]);
                         Vecd interface_area_vector = node1_position - node2_position;
@@ -571,7 +574,7 @@ namespace SPH
 	void InnerRelationInFVM::updateConfiguration()
 	{
 		resetNeighborhoodCurrentSize();
-		searchNeighborsByParticles(base_particles_.total_real_particles_,
+		searchNeighborsByParticles(base_particles_.total_real_particles_+base_particles_.total_ghost_particles_,
 									base_particles_, inner_configuration_in_FVM_,
 									get_particle_index_, get_inner_neighbor_);
 	}

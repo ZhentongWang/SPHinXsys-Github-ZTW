@@ -126,10 +126,6 @@ public:
 	virtual ~DMFBoundaryConditionSetup() {};
 	void update(size_t index_i, Real dt = 0.0)
     {
-        if(index_i==17|index_i==92|index_i==120|index_i==150)
-		{
-			Real a=1.0;
-		}
         NeighborhoodInFVM& inner_neighborhood = inner_configuration_in_FVM_[index_i];
 		for (size_t n = 0; n != inner_neighborhood.current_size_; ++n)
 		{
@@ -139,11 +135,6 @@ public:
 
 			if (inner_neighborhood.boundary_type_[n] == 3)
 			{
-				//non-slip wall boundary
-				/*Vecd vel_in_wall = -state_i.vel_;
-				Real p_in_wall = state_i.p_;
-				Real rho_in_wall = state_i.rho_;*/
-
 				//rigid wall boundary 
 				vel_[index_j] = (vel_[index_i] - e_ij.dot(vel_[index_i])*(e_ij)) + (-e_ij.dot(vel_[index_i])*(e_ij));
 				p_[index_j] = p_[index_i];
@@ -153,15 +144,6 @@ public:
 
             if (inner_neighborhood.boundary_type_[n] == 10)
             {
-				// parabolic velocity inflow
-                //Real U_f = 1.0; //characteristic velocity is set as 1
-                //Real h = 1.0;   // the height of the inflow domain size
-                //Vecd parabolic_velocity_inlet = Vecd::Zero();
-                //parabolic_velocity_inlet[0] = 1.5 * U_f * (1.0 - pos_[index_i][1] * pos_[index_i][1] / pow(0.5 * h, 2));
-                //Vecd vel_inlet = parabolic_velocity_inlet;
-                //Real p_inlet = state_i.p_;
-                //Real rho_inlet = state_i.rho_;
-
 				//given value inlet flow
 				Vecd vel_another= Vecd::Zero();
 				vel_another[0] = u_another;

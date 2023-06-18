@@ -77,13 +77,6 @@ namespace SPH
     : EulerianBaseIntegration(inner_relation), riemann_solver_(this->fluid_, this->fluid_) {}
 	//=================================================================================================//
 	template <class RiemannSolverType>
-	void BaseIntegration1stHalf<RiemannSolverType>::initialization(size_t index_i, Real dt)
-	{
-		rho_[index_i] += drho_dt_[index_i] * dt * 0.5;
-		p_[index_i] = fluid_.getPressure(rho_[index_i]);
-	}
-	//=================================================================================================//
-	template <class RiemannSolverType>
 	void BaseIntegration1stHalf<RiemannSolverType>::interaction(size_t index_i, Real dt)
 	{
 		FluidState state_i(rho_[index_i], vel_[index_i], p_[index_i]);
@@ -171,7 +164,8 @@ namespace SPH
 	template <class RiemannSolverType>
 	void BaseIntegration2ndHalf<RiemannSolverType>::update(size_t index_i, Real dt)
 	{
-		rho_[index_i] += drho_dt_[index_i] * dt * 0.5;
+		rho_[index_i] += drho_dt_[index_i] * dt;
+		p_[index_i] = fluid_.getPressure(rho_[index_i]);
 	}
 	//=================================================================================================//
 	template <class BaseIntegration2ndHalfType>

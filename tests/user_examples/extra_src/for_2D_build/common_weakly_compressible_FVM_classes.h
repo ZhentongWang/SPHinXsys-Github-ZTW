@@ -97,7 +97,6 @@ namespace SPH
 		explicit BaseIntegration1stHalfInFVM(BaseInnerRelationInFVM &inner_relation, Real limiter_parameter = 15.0);
 		virtual ~BaseIntegration1stHalfInFVM() {};
 		RiemannSolverType riemann_solver_;
-		void initialization(size_t index_i, Real dt = 0.0);
 		void interaction(size_t index_i, Real dt = 0.0);
 		void update(size_t index_i, Real dt = 0.0);
 	};

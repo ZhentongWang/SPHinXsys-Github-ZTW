@@ -42,13 +42,13 @@ int main(int ac, char *av[])
 	SimpleDynamics<DMFInitialCondition> initial_condition(wave_block);
 	initial_condition.exec();
 	/** Boundary conditions set up */
-	SimpleDynamics<DMFBoundaryConditionSetup, SequencedPolicy> boundary_condition_setup(water_block_inner);
+	SimpleDynamics<DMFBoundaryConditionSetup> boundary_condition_setup(water_block_inner);
 	SimpleDynamics<EulerianCompressibleTimeStepInitialization> initialize_a_fluid_step(wave_block);
 	/** Time step size with considering sound wave speed. */
 	ReduceDynamics<CompressibleAcousticTimeStepSizeInFVM> get_fluid_time_step_size(wave_block);
 	/** Here we introduce the limiter in the Riemann solver and 0 means the no extra numerical dissipation.
 	the value is larger, the numerical dissipation larger*/
-	Dynamics1Level<Integration1stHalfHLLCWithLimiterRiemannInFVM> pressure_relaxation(water_block_inner, 100.0);
+	InteractionWithUpdate<Integration1stHalfHLLCWithLimiterRiemannInFVM> pressure_relaxation(water_block_inner, 100.0);
 	InteractionWithUpdate<Integration2ndHalfHLLCWithLimiterRiemannInFVM> density_relaxation(water_block_inner, 100.0);
 	BodyStatesRecordingToVtp write_real_body_states(io_environment, sph_system.real_bodies_);
 	//----------------------------------------------------------------------
@@ -79,7 +79,7 @@ int main(int ac, char *av[])
 			Real dt = get_fluid_time_step_size.exec();
 			boundary_condition_setup.exec();
 			pressure_relaxation.exec(dt);
-			//boundary_condition_setup.exec();
+			boundary_condition_setup.exec();
 			density_relaxation.exec(dt);
 
 			integration_time += dt;

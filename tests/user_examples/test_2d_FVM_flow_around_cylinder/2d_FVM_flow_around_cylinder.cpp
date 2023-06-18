@@ -29,6 +29,7 @@ int main(int ac, char *av[])
 	water_block.defineParticlesAndMaterial<BaseParticles, WeaklyCompressibleFluid>(rho0_f, c_f, mu_f);
 	water_block.generateParticles<ParticleGeneratorInFVM>(read_mesh_data.elements_center_coordinates_, read_mesh_data.elements_volumes_);
 	water_block.addBodyStateForRecording<Real>("Density");
+	GhostCreationFromMesh ghost_creation_and_set_configuration(water_block, read_mesh_data.cell_lists_, read_mesh_data.point_coordinates_2D_);
 	//----------------------------------------------------------------------
 	//	Define body relation map.
 	//----------------------------------------------------------------------
@@ -41,13 +42,16 @@ int main(int ac, char *av[])
 	/** Initial condition */
 	SimpleDynamics<WeaklyCompressibleFluidInitialCondition> initial_condition(water_block);
 	initial_condition.exec();
+	/** Boundary conditions set up */
+	SimpleDynamics<FACBoundaryConditionSetup> boundary_condition_setup(water_block_inner);
+	boundary_condition_setup.exec();
 	SimpleDynamics<EulerianWCTimeStepInitialization> initialize_a_fluid_step(water_block);
 	/** Time step size with considering sound wave speed. */
 	ReduceDynamics<WCAcousticTimeStepSizeInFVM> get_fluid_time_step_size(water_block);
 	InteractionDynamics<ViscousAccelerationRiemannInnerInFVM> viscous_acceleration(water_block_inner);
 	/** Here we introduce the limiter in the Riemann solver and 0 means the no extra numerical dissipation.
 	the value is larger, the numerical dissipation larger*/
-	Dynamics1Level<Integration1stHalfAcousticRiemannInFVM> pressure_relaxation(water_block_inner, 50.0);
+	InteractionWithUpdate<Integration1stHalfAcousticRiemannInFVM> pressure_relaxation(water_block_inner, 50.0);
 	InteractionWithUpdate<Integration2ndHalfAcousticRiemannInFVM> density_relaxation(water_block_inner, 50.0);
 	//----------------------------------------------------------------------
 	//	Compute the force exerted on solid body due to fluid pressure and viscosity
@@ -91,7 +95,9 @@ int main(int ac, char *av[])
 			Real dt = get_fluid_time_step_size.exec();
 			viscous_acceleration.exec();
 			pressure_relaxation.exec(dt);
+			boundary_condition_setup.exec();
 			density_relaxation.exec(dt);
+			boundary_condition_setup.exec();
 
 			integration_time += dt;
 			GlobalStaticVariables::physical_time_ += dt;

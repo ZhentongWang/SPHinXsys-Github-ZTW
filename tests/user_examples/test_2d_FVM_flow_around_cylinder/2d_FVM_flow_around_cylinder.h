@@ -81,4 +81,53 @@ class WeaklyCompressibleFluidInitialCondition
     StdLargeVec<Real> &rho_, &p_;
 };
 
+//----------------------------------------------------------------------
+//	DMFBoundaryConditionSetup
+//----------------------------------------------------------------------
+class FACBoundaryConditionSetup : public LocalDynamics, public DataDelegateInnerInFVM<BaseParticles>
+{
+public:
+	FACBoundaryConditionSetup(BaseInnerRelationInFVM& inner_relation): 
+        LocalDynamics(inner_relation.getSPHBody()), DataDelegateInnerInFVM<BaseParticles>(inner_relation), 
+		compressible_fluid_(CompressibleFluid(1.0, 1.4)), rho_(particles_->rho_), p_(*particles_->getVariableByName<Real>("Pressure")), 
+        Vol_(particles_->Vol_), vel_(particles_->vel_), mom_(*particles_->getVariableByName<Vecd>("Momentum")), pos_(particles_->pos_),
+		fluid_(DynamicCast<WeaklyCompressibleFluid>(this, particles_->base_material_)){};
+	virtual ~FACBoundaryConditionSetup() {};
+	void update(size_t index_i, Real dt = 0.0)
+    {
+        NeighborhoodInFVM& inner_neighborhood = inner_configuration_in_FVM_[index_i];
+		for (size_t n = 0; n != inner_neighborhood.current_size_; ++n)
+		{
+			size_t index_j = inner_neighborhood.j_[n];
+			Real dW_ijV_j = inner_neighborhood.dW_ijV_j_[n];
+			Vecd& e_ij = inner_neighborhood.e_ij_[n];
+
+			if (inner_neighborhood.boundary_type_[n] == 3)
+			{
+				//non-slip wall boundary
+				vel_[index_j] = -vel_[index_i];
+				p_[index_j] = p_[index_i];
+				rho_[index_j] = rho_[index_i];
+			}
+			if (inner_neighborhood.boundary_type_[n] == 9)
+			{
+				//Far-field boundary
+				Vecd far_field_velocity(1.0, 0.0);
+				Real far_field_density = 1.0;
+				Real far_field_pressure = fluid_.getPressure(far_field_density);
+
+				vel_[index_j] = far_field_velocity;
+				p_[index_j] = far_field_pressure;
+				rho_[index_j] = far_field_density;
+			}
+		}
+    };
+protected:
+	CompressibleFluid compressible_fluid_;
+	StdLargeVec<Real>& rho_, & p_, & Vol_;
+	StdLargeVec<Vecd>& vel_, & mom_, & pos_;
+	Fluid& fluid_;
+
+};
+
 #endif // EULERIAN_FLOW_AROUND_CYLINDER_H

@@ -21,15 +21,6 @@ namespace SPH
     : BaseIntegrationInCompressible(inner_relation), riemann_solver_(compressible_fluid_, compressible_fluid_) {}
 	//=================================================================================================//
 	template <class RiemannSolverType>
-	void BaseIntegration1stHalf<RiemannSolverType>::initialization(size_t index_i, Real dt)
-	{
-		E_[index_i] += dE_dt_[index_i] * dt * 0.5;
-		rho_[index_i] += drho_dt_[index_i] * dt * 0.5;
-		Real rho_e = E_[index_i] - 0.5 * mom_[index_i].squaredNorm() / rho_[index_i];
-		p_[index_i] = compressible_fluid_.getPressure(rho_[index_i], rho_e);
-	}
-	//=================================================================================================//
-	template <class RiemannSolverType>
 	void BaseIntegration1stHalf<RiemannSolverType>::interaction(size_t index_i, Real dt)
 	{
 		CompressibleFluidState state_i(rho_[index_i], vel_[index_i], p_[index_i], E_[index_i]);
@@ -87,8 +78,10 @@ namespace SPH
 	template <class RiemannSolverType>
 	void BaseIntegration2ndHalf<RiemannSolverType>::update(size_t index_i, Real dt)
 	{
-		E_[index_i] += dE_dt_[index_i] * dt * 0.5;
-		rho_[index_i] += drho_dt_[index_i] * dt * 0.5;
+		E_[index_i] += dE_dt_[index_i] * dt;
+		rho_[index_i] += drho_dt_[index_i] * dt;
+		Real rho_e = E_[index_i] - 0.5 * mom_[index_i].squaredNorm() / rho_[index_i];
+		p_[index_i] = compressible_fluid_.getPressure(rho_[index_i], rho_e);
 	}
 	//=================================================================================================//
 }

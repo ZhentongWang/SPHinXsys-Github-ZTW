@@ -246,22 +246,12 @@ namespace SPH
             {
                 for (size_t neighbor_index = 0; neighbor_index != all_needed_data_from_mesh_file_[index_i].size(); ++neighbor_index)
                 {
-                    size_t index_check2 = index_i;
                     size_t boundary_type = all_needed_data_from_mesh_file_[index_i][neighbor_index][1];
                     if (all_needed_data_from_mesh_file_[index_i][neighbor_index][1] != 2)
                     {
-                        size_t index_check = index_i;
-                        if (index_check > 3700)
-                        {
-                            Real a = 1.0;
-                        }
                         mutex_create_ghost_particle_.lock();
                         size_t check_real = real_particles_bound_;
                         size_t ghost_particle_index = particles_->insertAGhostParticle(index_i);
-                        //size_t ghost_particle_index = finial_real_particle_index ;
-                       /* total_ghost_particles_ += 1;
-		                size_t expected_size = all_real_particle_number + total_ghost_particles_;
-		                size_t ghost_particle_index = expected_size - 1;*/
                         size_t node1_index=all_needed_data_from_mesh_file_[index_i][neighbor_index][2];
                         size_t node2_index=all_needed_data_from_mesh_file_[index_i][neighbor_index][3];
                         Vecd node1_position = Vecd(nodes_coordinates_[node1_index][0], nodes_coordinates_[node1_index][1]);
@@ -274,21 +264,19 @@ namespace SPH
                         pos_[ghost_particle_index] = ghost_particle_position;
                         mutex_create_ghost_particle_.unlock();
 
-                        //check if it is available
-                        all_needed_data_from_mesh_file_.resize(ghost_particle_index);
-                        
+                        all_needed_data_from_mesh_file_.resize(ghost_particle_index);                      
                         std::vector<std::vector<size_t>> new_element;
 
-                        // Add (gohost particle index,boundary_type,ghost_particle_index,ghost_particle_index) to the new element
-                        std::vector<size_t> sub_element1 = {index_i+1, boundary_type, 0, 0};
+                        // Add (corresponding_index_i,boundary_type,node1_index,node2_index) to the new element
+                        std::vector<size_t> sub_element1 = {index_i+1, boundary_type, node1_index, node2_index};
                         new_element.push_back(sub_element1);
 
-                        // Add an empty sub-element to the new element
-                        std::vector<size_t> sub_element2= {index_i+1, boundary_type, 0, 0};
+                        // Add (corresponding_index_i,boundary_type,node1_index,node2_index) to the new element
+                        std::vector<size_t> sub_element2= {index_i+1, boundary_type, node1_index, node2_index};
                         new_element.push_back(sub_element2);
 
-                        // Add an empty sub-element to the new element
-                        std::vector<size_t> sub_element3= {index_i+1, boundary_type, 0, 0};
+                        // Add (corresponding_index_i,boundary_type,node1_index,node2_index) to the new element
+                        std::vector<size_t> sub_element3= {index_i+1, boundary_type, node1_index, node2_index};
                         new_element.push_back(sub_element3);
 
                         // Add the new element to all_needed_data_from_mesh_file_

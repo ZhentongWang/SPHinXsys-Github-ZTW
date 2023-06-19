@@ -29,6 +29,8 @@ int main(int ac, char *av[])
 	water_block.defineParticlesAndMaterial<BaseParticles, WeaklyCompressibleFluid>(rho0_f, c_f, mu_f);
 	water_block.generateParticles<ParticleGeneratorInFVM>(read_mesh_data.elements_center_coordinates_, read_mesh_data.elements_volumes_);
 	water_block.addBodyStateForRecording<Real>("Density");
+	/** Initial condition */
+	SimpleDynamics<WeaklyCompressibleFluidInitialCondition> initial_condition(water_block);
 	GhostCreationFromMesh ghost_creation_and_set_configuration(water_block, read_mesh_data.cell_lists_, read_mesh_data.point_coordinates_2D_);
 	//----------------------------------------------------------------------
 	//	Define body relation map.
@@ -39,9 +41,6 @@ int main(int ac, char *av[])
 	//	Define the main numerical methods used in the simulation.
 	//	Note that there may be data dependence on the constructors of these methods.
 	//----------------------------------------------------------------------
-	/** Initial condition */
-	SimpleDynamics<WeaklyCompressibleFluidInitialCondition> initial_condition(water_block);
-	initial_condition.exec();
 	/** Boundary conditions set up */
 	SimpleDynamics<FACBoundaryConditionSetup> boundary_condition_setup(water_block_inner);
 	boundary_condition_setup.exec();
@@ -67,6 +66,10 @@ int main(int ac, char *av[])
 	ReducedQuantityRecording<ReduceDynamics<solid_dynamics::TotalForceFromFluid>>
 		write_total_force_on_inserted_body(io_environment, fluid_force_on_solid_update, "TotalPressureForceOnSolid");
 	ReducedQuantityRecording<ReduceDynamics<MaximumSpeed>> write_maximum_speed(io_environment, water_block);
+	//----------------------------------------------------------------------
+	//	Prepare the simulation with case specified initial condition if necessary.
+	//----------------------------------------------------------------------
+	initial_condition.exec();
 	//----------------------------------------------------------------------
 	//	Setup for time-stepping control
 	//----------------------------------------------------------------------

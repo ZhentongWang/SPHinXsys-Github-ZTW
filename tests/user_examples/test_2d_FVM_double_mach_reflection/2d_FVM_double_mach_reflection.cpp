@@ -28,6 +28,8 @@ int main(int ac, char *av[])
 	wave_block.defineParticlesAndMaterial<BaseParticles, CompressibleFluid>(rho0_another, heat_capacity_ratio);
 	wave_block.generateParticles<ParticleGeneratorInFVM>(read_mesh_data.elements_center_coordinates_, read_mesh_data.elements_volumes_);
 	wave_block.addBodyStateForRecording<Real>("Density");
+	/** Initial condition and register variables*/
+	SimpleDynamics<DMFInitialCondition> initial_condition(wave_block);
 	GhostCreationFromMesh ghost_creation_and_set_configuration(wave_block, read_mesh_data.cell_lists_, read_mesh_data.point_coordinates_2D_);
 	//----------------------------------------------------------------------
 	//	Define body relation map.
@@ -38,9 +40,6 @@ int main(int ac, char *av[])
 	//	Define the main numerical methods used in the simulation.
 	//	Note that there may be data dependence on the constructors of these methods.
 	//----------------------------------------------------------------------
-	/** Initial condition */
-	SimpleDynamics<DMFInitialCondition> initial_condition(wave_block);
-	initial_condition.exec();
 	/** Boundary conditions set up */
 	SimpleDynamics<DMFBoundaryConditionSetup> boundary_condition_setup(water_block_inner);
 	SimpleDynamics<EulerianCompressibleTimeStepInitialization> initialize_a_fluid_step(wave_block);
@@ -51,6 +50,10 @@ int main(int ac, char *av[])
 	InteractionWithUpdate<Integration1stHalfHLLCWithLimiterRiemannInFVM> pressure_relaxation(water_block_inner, 100.0);
 	InteractionWithUpdate<Integration2ndHalfHLLCWithLimiterRiemannInFVM> density_relaxation(water_block_inner, 100.0);
 	BodyStatesRecordingToVtp write_real_body_states(io_environment, sph_system.real_bodies_);
+	//----------------------------------------------------------------------
+	//	Prepare the simulation with case specified initial condition if necessary.
+	//----------------------------------------------------------------------
+	initial_condition.exec();
 	//----------------------------------------------------------------------
 	//	Setup for time-stepping control
 	//----------------------------------------------------------------------

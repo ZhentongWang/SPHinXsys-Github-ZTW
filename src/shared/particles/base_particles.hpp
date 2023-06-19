@@ -45,7 +45,7 @@ namespace SPH
 
         if (all_variable_maps_[type_index].find(variable_name) == all_variable_maps_[type_index].end())
         {
-            variable_addrs.resize(real_particles_bound_+total_ghost_particles_, initial_value);
+            variable_addrs.resize(real_particles_bound_, initial_value);
             std::get<type_index>(all_particle_data_).push_back(&variable_addrs);
             all_variable_maps_[type_index].insert(make_pair(variable_name, std::get<type_index>(all_particle_data_).size() - 1));
         }

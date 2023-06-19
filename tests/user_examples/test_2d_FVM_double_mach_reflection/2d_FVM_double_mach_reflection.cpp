@@ -41,7 +41,7 @@ int main(int ac, char *av[])
 	//	Note that there may be data dependence on the constructors of these methods.
 	//----------------------------------------------------------------------
 	/** Boundary conditions set up */
-	SimpleDynamics<DMFBoundaryConditionSetup> boundary_condition_setup(water_block_inner);
+	DMFBoundaryConditionSetup boundary_condition_setup(water_block_inner);
 	SimpleDynamics<EulerianCompressibleTimeStepInitialization> initialize_a_fluid_step(wave_block);
 	/** Time step size with considering sound wave speed. */
 	ReduceDynamics<CompressibleAcousticTimeStepSizeInFVM> get_fluid_time_step_size(wave_block);
@@ -80,9 +80,9 @@ int main(int ac, char *av[])
 		{
 			initialize_a_fluid_step.exec();
 			Real dt = get_fluid_time_step_size.exec();
-			boundary_condition_setup.exec();
+			boundary_condition_setup.resetBoundaryConditions();
 			pressure_relaxation.exec(dt);
-			boundary_condition_setup.exec();
+			boundary_condition_setup.resetBoundaryConditions();
 			density_relaxation.exec(dt);
 
 			integration_time += dt;

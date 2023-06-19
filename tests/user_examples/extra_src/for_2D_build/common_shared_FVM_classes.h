@@ -214,12 +214,11 @@ namespace SPH
 	 * @class BaseGhostCreation
 	 * @brief Base class for the ghost particle
 	 */
-	class GhostCreationFromMesh : public LocalDynamics, public GeneralDataDelegateSimple
+	class GhostCreationFromMesh : public GeneralDataDelegateSimple
 	{
 	public:
 		GhostCreationFromMesh(RealBody &real_body, vector<vector<vector<size_t>>>& data_inpute, vector<vector<Real>> nodes_coordinates)
-              : LocalDynamics(real_body), GeneralDataDelegateSimple(real_body),
-			all_needed_data_from_mesh_file_(data_inpute), nodes_coordinates_(nodes_coordinates),
+              : GeneralDataDelegateSimple(real_body), all_needed_data_from_mesh_file_(data_inpute), nodes_coordinates_(nodes_coordinates),
             pos_(particles_->pos_), Vol_(particles_->Vol_), total_ghost_particles_(particles_->total_ghost_particles_),
             real_particles_bound_(particles_->real_particles_bound_)
         {

@@ -115,34 +115,34 @@ class DMFInitialCondition
 //----------------------------------------------------------------------
 //	DMFBoundaryConditionSetup
 //----------------------------------------------------------------------
-class DMFBoundaryConditionSetup : public LocalDynamics, public DataDelegateInnerInFVM<BaseParticles>
+class DMFBoundaryConditionSetup : public DataDelegateInnerInFVM<BaseParticles>
 {
 public:
 	DMFBoundaryConditionSetup(BaseInnerRelationInFVM& inner_relation): 
-        LocalDynamics(inner_relation.getSPHBody()), DataDelegateInnerInFVM<BaseParticles>(inner_relation), 
+        DataDelegateInnerInFVM<BaseParticles>(inner_relation), 
 		compressible_fluid_(CompressibleFluid(1.0, 1.4)), rho_(particles_->rho_), p_(*particles_->getVariableByName<Real>("Pressure")), 
         Vol_(particles_->Vol_), E_(*particles_->getVariableByName<Real>("TotalEnergy")), vel_(particles_->vel_), 
-        mom_(*particles_->getVariableByName<Vecd>("Momentum")), pos_(particles_->pos_){};
+        mom_(*particles_->getVariableByName<Vecd>("Momentum")), pos_(particles_->pos_), total_ghost_particles_(particles_->total_ghost_particles_),
+        real_particles_bound_(particles_->real_particles_bound_){};
 	virtual ~DMFBoundaryConditionSetup() {};
-	void update(size_t index_i, Real dt = 0.0)
-    {
-        NeighborhoodInFVM& inner_neighborhood = inner_configuration_in_FVM_[index_i];
-		for (size_t n = 0; n != inner_neighborhood.current_size_; ++n)
-		{
-			size_t index_j = inner_neighborhood.j_[n];
-			Real dW_ijV_j = inner_neighborhood.dW_ijV_j_[n];
-			Vecd& e_ij = inner_neighborhood.e_ij_[n];
 
-			if (inner_neighborhood.boundary_type_[n] == 3)
+    void resetBoundaryConditions()
+    {
+        for (size_t ghost_index = real_particles_bound_; ghost_index != real_particles_bound_ + total_ghost_particles_;++ghost_index)
+        {
+            NeighborhoodInFVM& inner_neighborhood = inner_configuration_in_FVM_[ghost_index];
+            size_t index_i = inner_neighborhood.j_[0];
+			Vecd& e_ij = inner_neighborhood.e_ij_[0];
+            if (inner_neighborhood.boundary_type_[0] == 3)
 			{
 				//rigid wall boundary 
-				vel_[index_j] = (vel_[index_i] - e_ij.dot(vel_[index_i])*(e_ij)) + (-e_ij.dot(vel_[index_i])*(e_ij));
-				p_[index_j] = p_[index_i];
-				rho_[index_j] = rho_[index_i];
-				E_[index_j]=E_[index_i];
+				vel_[ghost_index] = (vel_[index_i] - e_ij.dot(vel_[index_i])*(e_ij)) + (-e_ij.dot(vel_[index_i])*(e_ij));
+				p_[ghost_index] = p_[index_i];
+				rho_[ghost_index] = rho_[index_i];
+				E_[ghost_index]=E_[index_i];
 			}
 
-            if (inner_neighborhood.boundary_type_[n] == 10)
+            if (inner_neighborhood.boundary_type_[0] == 10)
             {
 				//given value inlet flow
 				Vecd vel_another= Vecd::Zero();
@@ -152,54 +152,54 @@ public:
 				Real rho_e_another = p_another / (1.4 - 1.0);
 				Real E_inlet_another = rho_e_another + 0.5 * rho0_another * vel_another.squaredNorm();
 
-				rho_[index_j] = rho0_another;
-				p_[index_j] = p_another;
-				vel_[index_j][0] = u_another;
-				vel_[index_j][1] = v_another;
-				E_[index_j] = E_inlet_another;
+				rho_[ghost_index] = rho0_another;
+				p_[ghost_index] = p_another;
+				vel_[ghost_index][0] = u_another;
+				vel_[ghost_index][1] = v_another;
+				E_[ghost_index] = E_inlet_another;
             }
                 
-            if (inner_neighborhood.boundary_type_[n] == 36)
+            if (inner_neighborhood.boundary_type_[0] == 36)
             {
                 //Outlet boundary condition
-                vel_[index_j] = vel_[index_i];
-                p_[index_j] = p_[index_i];
-				rho_[index_j] = rho_[index_i];
-				E_[index_j]=E_[index_i];
-
+                vel_[ghost_index] = vel_[index_i];
+                p_[ghost_index] = p_[index_i];
+				rho_[ghost_index] = rho_[index_i];
+				E_[ghost_index]=E_[index_i];
             }
 
 			//Top boundary condition
-            if (inner_neighborhood.boundary_type_[n] == 4)
+            if (inner_neighborhood.boundary_type_[0] == 4)
             {
                 Real run_time = GlobalStaticVariables::physical_time_;
                 Real x_1 = 1.0 / 6.0 + run_time * 10.0 / sin(3.14159 / 3.0);
                 if (pos_[index_i][1] > tan(3.14159 / 3.0) * (pos_[index_i][0] - x_1))
                 {
-                    rho_[index_j] = rho0_another;
-                    p_[index_j] = p_another;
-                    Real rho_e = p_[index_j] / (heat_capacity_ratio - 1.0);
-                    vel_[index_j][0] = u_another;
-                    vel_[index_j][1] = v_another;
-                    E_[index_j] = rho_e + 0.5 * rho_[index_j] * vel_[index_j].squaredNorm();
+                    rho_[ghost_index] = rho0_another;
+                    p_[ghost_index] = p_another;
+                    Real rho_e = p_[ghost_index] / (heat_capacity_ratio - 1.0);
+                    vel_[ghost_index][0] = u_another;
+                    vel_[ghost_index][1] = v_another;
+                    E_[ghost_index] = rho_e + 0.5 * rho_[ghost_index] * vel_[ghost_index].squaredNorm();
                 }
                 else
                 {
-                    rho_[index_j] = rho0_one;
-                    p_[index_j] = p_one;
-                    Real rho_e = p_[index_j] / (heat_capacity_ratio - 1.0);
-                    vel_[index_j][0] = u_one;
-                    vel_[index_j][1] = v_one;
-                    E_[index_j] = rho_e + 0.5 * rho_[index_j] * vel_[index_j].squaredNorm();
+                    rho_[ghost_index] = rho0_one;
+                    p_[ghost_index] = p_one;
+                    Real rho_e = p_[ghost_index] / (heat_capacity_ratio - 1.0);
+                    vel_[ghost_index][0] = u_one;
+                    vel_[ghost_index][1] = v_one;
+                    E_[ghost_index] = rho_e + 0.5 * rho_[ghost_index] * vel_[ghost_index].squaredNorm();
                 }
             }
-		}
+        }
     };
 protected:
 	CompressibleFluid compressible_fluid_;
 	StdLargeVec<Real>& rho_, & p_, & Vol_, & E_;
 	StdLargeVec<Vecd>& vel_, & mom_, & pos_;
-
+    size_t &total_ghost_particles_;
+    size_t &real_particles_bound_;
 };
 
 #endif // FVM_DOUBLE_MACH_REFLECTION_H

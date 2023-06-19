@@ -42,8 +42,7 @@ int main(int ac, char *av[])
 	//	Note that there may be data dependence on the constructors of these methods.
 	//----------------------------------------------------------------------
 	/** Boundary conditions set up */
-	SimpleDynamics<FACBoundaryConditionSetup> boundary_condition_setup(water_block_inner);
-	boundary_condition_setup.exec();
+	FACBoundaryConditionSetup boundary_condition_setup(water_block_inner);
 	SimpleDynamics<EulerianWCTimeStepInitialization> initialize_a_fluid_step(water_block);
 	/** Time step size with considering sound wave speed. */
 	ReduceDynamics<WCAcousticTimeStepSizeInFVM> get_fluid_time_step_size(water_block);
@@ -96,11 +95,11 @@ int main(int ac, char *av[])
 		{
 			initialize_a_fluid_step.exec();
 			Real dt = get_fluid_time_step_size.exec();
+			boundary_condition_setup.resetBoundaryConditions();
 			viscous_acceleration.exec();
 			pressure_relaxation.exec(dt);
-			boundary_condition_setup.exec();
+			boundary_condition_setup.resetBoundaryConditions();
 			density_relaxation.exec(dt);
-			boundary_condition_setup.exec();
 
 			integration_time += dt;
 			GlobalStaticVariables::physical_time_ += dt;

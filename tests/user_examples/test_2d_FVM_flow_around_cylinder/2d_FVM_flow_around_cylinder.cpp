@@ -31,7 +31,7 @@ int main(int ac, char *av[])
 	water_block.addBodyStateForRecording<Real>("Density");
 	/** Initial condition */
 	SimpleDynamics<WeaklyCompressibleFluidInitialCondition> initial_condition(water_block);
-	GhostCreationFromMesh ghost_creation_and_set_configuration(water_block, read_mesh_data.cell_lists_, read_mesh_data.point_coordinates_2D_);
+	GhostCreationFromMesh ghost_creation(water_block, read_mesh_data.cell_lists_, read_mesh_data.point_coordinates_2D_);
 	//----------------------------------------------------------------------
 	//	Define body relation map.
 	//----------------------------------------------------------------------
@@ -42,7 +42,8 @@ int main(int ac, char *av[])
 	//	Note that there may be data dependence on the constructors of these methods.
 	//----------------------------------------------------------------------
 	/** Boundary conditions set up */
-	FACBoundaryConditionSetup boundary_condition_setup(water_block_inner);
+	FACBoundaryConditionSetup boundary_condition_setup(water_block_inner,ghost_creation.each_boundary_type_with_all_ghosts_index_,
+		ghost_creation.each_boundary_type_with_all_ghosts_eij_,ghost_creation.each_boundary_type_contact_real_index_);
 	SimpleDynamics<EulerianWCTimeStepInitialization> initialize_a_fluid_step(water_block);
 	/** Time step size with considering sound wave speed. */
 	ReduceDynamics<WCAcousticTimeStepSizeInFVM> get_fluid_time_step_size(water_block);

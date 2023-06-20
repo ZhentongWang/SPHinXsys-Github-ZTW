@@ -87,38 +87,46 @@ class WeaklyCompressibleFluidInitialCondition
 class FACBoundaryConditionSetup : public DataDelegateInnerInFVM<BaseParticles>
 {
 public:
-	FACBoundaryConditionSetup(BaseInnerRelationInFVM& inner_relation): 
+	FACBoundaryConditionSetup(BaseInnerRelationInFVM& inner_relation, vector<vector<size_t>> each_boundary_type_with_all_ghosts_index,
+        vector<vector<Vecd>> each_boundary_type_with_all_ghosts_eij_,vector<vector<size_t>> each_boundary_type_contact_real_index): 
         DataDelegateInnerInFVM<BaseParticles>(inner_relation), rho_(particles_->rho_), p_(*particles_->getVariableByName<Real>("Pressure")), 
         Vol_(particles_->Vol_), vel_(particles_->vel_), mom_(*particles_->getVariableByName<Vecd>("Momentum")), pos_(particles_->pos_),
 		fluid_(DynamicCast<WeaklyCompressibleFluid>(this, particles_->base_material_)), total_ghost_particles_(particles_->total_ghost_particles_),
-        real_particles_bound_(particles_->real_particles_bound_){};
+        real_particles_bound_(particles_->real_particles_bound_),each_boundary_type_with_all_ghosts_index_(each_boundary_type_with_all_ghosts_index),
+        each_boundary_type_with_all_ghosts_eij_(each_boundary_type_with_all_ghosts_eij_),each_boundary_type_contact_real_index_(each_boundary_type_contact_real_index){};
 	virtual ~FACBoundaryConditionSetup() {};
 
 	void resetBoundaryConditions()
     {
-        for (size_t ghost_index = real_particles_bound_; ghost_index != real_particles_bound_ + total_ghost_particles_;++ghost_index)
+		for (size_t boundary_type = 0; boundary_type < each_boundary_type_with_all_ghosts_index_.size(); ++boundary_type)
         {
-            NeighborhoodInFVM& inner_neighborhood = inner_configuration_in_FVM_[ghost_index];
-            size_t index_i = inner_neighborhood.j_[0];
-			Vecd& e_ij = inner_neighborhood.e_ij_[0];
-            if (inner_neighborhood.boundary_type_[0] == 3)
-			{
-				//non-slip wall boundary
-				vel_[ghost_index] = -vel_[index_i];
-				p_[ghost_index] = p_[index_i];
-				rho_[ghost_index] = rho_[index_i];
-			}
-			if (inner_neighborhood.boundary_type_[0] == 9)
-			{
-				//Far-field boundary
-				Vecd far_field_velocity(1.0, 0.0);
-				Real far_field_density = 1.0;
-				Real far_field_pressure = fluid_.getPressure(far_field_density);
+            if (!each_boundary_type_with_all_ghosts_index_[boundary_type].empty()) 
+            {
+                for (size_t ghost_number = 0; ghost_number != each_boundary_type_with_all_ghosts_index_[boundary_type].size(); ++ghost_number)
+                {
+                    size_t ghost_index = each_boundary_type_with_all_ghosts_index_[boundary_type][ghost_number];
+                    size_t index_i = each_boundary_type_contact_real_index_[boundary_type][ghost_number];
+                    Vecd e_ij=each_boundary_type_with_all_ghosts_eij_[boundary_type][ghost_number];
+                    if (boundary_type == 3)
+					{
+						//non-slip wall boundary
+						vel_[ghost_index] = -vel_[index_i];
+						p_[ghost_index] = p_[index_i];
+						rho_[ghost_index] = rho_[index_i];
+					}
+					if (boundary_type == 9)
+					{
+						//Far-field boundary
+						Vecd far_field_velocity(1.0, 0.0);
+						Real far_field_density = 1.0;
+						Real far_field_pressure = fluid_.getPressure(far_field_density);
 
-				vel_[ghost_index] = far_field_velocity;
-				p_[ghost_index] = far_field_pressure;
-				rho_[ghost_index] = far_field_density;
-			}
+						vel_[ghost_index] = far_field_velocity;
+						p_[ghost_index] = far_field_pressure;
+						rho_[ghost_index] = far_field_density;
+					}
+                }
+            }
         }
     };
 protected:
@@ -127,6 +135,9 @@ protected:
 	Fluid& fluid_;
 	size_t &total_ghost_particles_;
     size_t &real_particles_bound_;
+	vector<vector<size_t>> each_boundary_type_with_all_ghosts_index_;
+    vector<vector<Vecd>> each_boundary_type_with_all_ghosts_eij_;
+    vector<vector<size_t>> each_boundary_type_contact_real_index_;
 };
 
 #endif // EULERIAN_FLOW_AROUND_CYLINDER_H

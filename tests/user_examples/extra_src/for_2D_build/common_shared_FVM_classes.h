@@ -222,10 +222,16 @@ namespace SPH
             pos_(particles_->pos_), Vol_(particles_->Vol_), total_ghost_particles_(particles_->total_ghost_particles_),
             real_particles_bound_(particles_->real_particles_bound_)
         {
+            each_boundary_type_with_all_ghosts_index_.resize(50);
+            each_boundary_type_with_all_ghosts_eij_.resize(50);
+            each_boundary_type_contact_real_index_.resize(50);
             ghost_particles_.resize(1);
             addGhostParticleAndSetInConfiguration();
         }
 		virtual ~GhostCreationFromMesh(){};
+        vector<vector<size_t>> each_boundary_type_with_all_ghosts_index_;
+        vector<vector<Vecd>> each_boundary_type_with_all_ghosts_eij_;
+        vector<vector<size_t>> each_boundary_type_contact_real_index_;
 	protected:
         std::mutex mutex_create_ghost_particle_; /**< mutex exclusion for memory conflict */
         vector<vector<vector<size_t>>>& all_needed_data_from_mesh_file_;
@@ -282,6 +288,28 @@ namespace SPH
                         all_needed_data_from_mesh_file_.push_back(new_element);
                         //all_needed_data_from_mesh_file_[ghost_particle_index][0][0].push_back(size_t(0);
 
+                        //creating the boundary files with ghost particle index
+                        each_boundary_type_with_all_ghosts_index_[boundary_type].push_back(ghost_particle_index);
+
+                        //creating the boundary files with contact real particle index
+                        each_boundary_type_contact_real_index_[boundary_type].push_back(index_i);
+
+                        //creating the boundary files with ghost eij
+                         size_t interface_node1_index = all_needed_data_from_mesh_file_[index_i][2][2];
+                        size_t interface_node2_index = all_needed_data_from_mesh_file_[index_i][2][3];
+                        Vecd interface_area_vector = node1_position - node2_position;
+                        Real interface_area_size = interface_area_vector.norm();
+                        Vecd unit_vector = interface_area_vector / interface_area_size;
+                        //normal unit vector
+                        Vecd normal_vector = Vecd(unit_vector[1], -unit_vector[0]);
+                        //judge the direction
+                        Vecd particle_position = pos_[index_i];
+                        Vecd node1_to_center_direction = particle_position - node1_position;
+                        if (node1_to_center_direction.dot(normal_vector) < 0)
+                        {
+                            normal_vector = -normal_vector;
+                        };
+                        each_boundary_type_with_all_ghosts_eij_[boundary_type].push_back(normal_vector);
                     }
                 }
             }

@@ -68,29 +68,10 @@ namespace SPH
     };
 
     /**
-    * @class NeighborhoodInFVM
-    * @brief A neighborhood around particle i in FVM.
-    */
-    class NeighborhoodInFVM : public Neighborhood
-    {
-    public:
-	    StdLargeVec<size_t> boundary_type_;	  /**< index of the neighbor particle. */
-	    StdLargeVec<Real> interface_size_; /**< interface area size */
-
-	    NeighborhoodInFVM() : Neighborhood() {};
-	    ~NeighborhoodInFVM() {};
-
-	    void removeANeighbor(size_t neighbor_n);
-    };
-
-    /** Neighborhoods for all particles in a body for a inner body relation. */
-    using ParticleConfigurationInFVM = StdLargeVec<NeighborhoodInFVM>;
-
-    /**
     * @class BaseInnerRelationInFVM
     * @brief The abstract relation within a SPH body in FVM
     */
-    class BaseInnerRelationInFVM : public SPHRelation
+    class BaseInnerRelationInFVM : public BaseInnerRelation
     {
       protected:
         virtual void resetNeighborhoodCurrentSize();
@@ -99,7 +80,6 @@ namespace SPH
         RealBody *real_body_;
         vector<vector<vector<size_t>>> all_needed_data_from_mesh_file_;
         vector<vector<Real>> nodes_coordinates_;
-        ParticleConfigurationInFVM inner_configuration_in_FVM_; /**< inner configuration for the neighbor relations. */
         explicit BaseInnerRelationInFVM(RealBody &real_body, vector<vector<vector<size_t>>> data_inpute, vector<vector<Real>> nodes_coordinates);
         virtual ~BaseInnerRelationInFVM(){};
 
@@ -136,10 +116,9 @@ namespace SPH
         //----------------------------------------------------------------------
         //	Below are for constant smoothing length.
         //----------------------------------------------------------------------
-        void createRelation(NeighborhoodInFVM &neighborhood, Real &distance, Real &dW_ijV_j, Real &interface_size,
-                            Vecd &interface_normal_direction, size_t bc_type, size_t j_index) const;
-        void initializeRelation(NeighborhoodInFVM &neighborhood, Real &distance, Real &dW_ijV_j, Real &interface_size,
-                                Vecd &interface_normal_direction, size_t bc_type, size_t j_index) const;
+        void createRelation(Neighborhood &neighborhood, Real &distance, Real &dW_ijV_j, Vecd &interface_normal_direction, size_t j_index) const;
+        void initializeRelation(Neighborhood &neighborhood, Real &distance, Real &dW_ijV_j,
+                                Vecd &interface_normal_direction, size_t j_index) const;
       public:
         NeighborBuilderInFVM() : kernel_(nullptr){};
         virtual ~NeighborBuilderInFVM(){};
@@ -153,12 +132,12 @@ namespace SPH
     {
       public:
         explicit NeighborBuilderInnerInFVM(SPHBody *body) : NeighborBuilderInFVM(){};
-        void operator()(NeighborhoodInFVM &neighborhood, Real &distance,
-                        Real &dW_ijV_j, Real &interface_size, Vecd &interface_normal_direction, size_t bc_type, size_t j_index) const
+        void operator()(Neighborhood &neighborhood, Real &distance,
+                        Real &dW_ijV_j, Vecd &interface_normal_direction, size_t j_index) const
         {
             neighborhood.current_size_ >= neighborhood.allocated_size_
-                ? createRelation(neighborhood, distance, dW_ijV_j, interface_size, interface_normal_direction, bc_type, j_index)
-                : initializeRelation(neighborhood, distance, dW_ijV_j, interface_size, interface_normal_direction, bc_type, j_index);
+                ? createRelation(neighborhood, distance, dW_ijV_j, interface_normal_direction, j_index)
+                : initializeRelation(neighborhood, distance, dW_ijV_j, interface_normal_direction, j_index);
             neighborhood.current_size_++;
         };
     };
@@ -186,29 +165,9 @@ namespace SPH
         /** generalized particle search algorithm */
         template <typename GetParticleIndex, typename GetNeighborRelation>
         void searchNeighborsByParticles(size_t total_real_particles, BaseParticles &source_particles,
-                                        ParticleConfigurationInFVM &particle_configuration, GetParticleIndex &get_particle_index, GetNeighborRelation &get_neighbor_relation);
+                                        ParticleConfiguration &particle_configuration, GetParticleIndex &get_particle_index, GetNeighborRelation &get_neighbor_relation);
         virtual void updateConfiguration() override;
     };
-
-    /**
-     * @class DataDelegateInnerInFVM
-     * @brief prepare data for inner particle dynamics
-     */
-    template <class ParticlesType = BaseParticles,
-              class BaseDataDelegateType = DataDelegateSimple<ParticlesType>>
-    class DataDelegateInnerInFVM : public BaseDataDelegateType
-    {
-      public:
-        explicit DataDelegateInnerInFVM(BaseInnerRelationInFVM &inner_relation)
-            : BaseDataDelegateType(inner_relation.getSPHBody()),
-              inner_configuration_in_FVM_(inner_relation.inner_configuration_in_FVM_){};
-        virtual ~DataDelegateInnerInFVM(){};
-
-      protected:
-        /** inner configuration of the designated body */
-        ParticleConfigurationInFVM &inner_configuration_in_FVM_;
-    };
-
 
     /**
 	 * @class BaseGhostCreation

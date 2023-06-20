@@ -10,7 +10,7 @@
 #include "common_shared_FVM_classes.h" // shared classes for weakly-compressible and compressible fluid in FVM.
 #include "common_weakly_compressible_FVM_classes.hpp" // classes for weakly compressible fluid only in FVM.
 #include "common_shared_eulerian_classes.h" // shared eulerian classes for weakly-compressible and compressible fluid.
-#include "common_weakly_compressible_eulerian_classes.h" // eulerian classes for weakly compressible fluid only.
+#include "common_weakly_compressible_eulerian_classes.hpp" // eulerian classes for weakly compressible fluid only.
 using namespace SPH;
 using namespace std;
 //----------------------------------------------------------------------
@@ -84,12 +84,12 @@ class WeaklyCompressibleFluidInitialCondition
 //----------------------------------------------------------------------
 //	DMFBoundaryConditionSetup
 //----------------------------------------------------------------------
-class FACBoundaryConditionSetup : public DataDelegateInnerInFVM<BaseParticles>
+class FACBoundaryConditionSetup : public fluid_dynamics::FluidDataInner
 {
 public:
 	FACBoundaryConditionSetup(BaseInnerRelationInFVM& inner_relation, vector<vector<size_t>> each_boundary_type_with_all_ghosts_index,
         vector<vector<Vecd>> each_boundary_type_with_all_ghosts_eij_,vector<vector<size_t>> each_boundary_type_contact_real_index): 
-        DataDelegateInnerInFVM<BaseParticles>(inner_relation), rho_(particles_->rho_), p_(*particles_->getVariableByName<Real>("Pressure")), 
+        fluid_dynamics::FluidDataInner(inner_relation), rho_(particles_->rho_), p_(*particles_->getVariableByName<Real>("Pressure")), 
         Vol_(particles_->Vol_), vel_(particles_->vel_), mom_(*particles_->getVariableByName<Vecd>("Momentum")), pos_(particles_->pos_),
 		fluid_(DynamicCast<WeaklyCompressibleFluid>(this, particles_->base_material_)), total_ghost_particles_(particles_->total_ghost_particles_),
         real_particles_bound_(particles_->real_particles_bound_),each_boundary_type_with_all_ghosts_index_(each_boundary_type_with_all_ghosts_index),

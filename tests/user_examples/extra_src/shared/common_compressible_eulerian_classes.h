@@ -179,7 +179,7 @@ namespace SPH
 	class BaseIntegration1stHalf : public BaseIntegrationInCompressible
 	{
 	public:
-		explicit BaseIntegration1stHalf(BaseInnerRelation& inner_relation);
+		explicit BaseIntegration1stHalf(BaseInnerRelation& inner_relation, Real limiter_parameter=5.0);
 		virtual ~BaseIntegration1stHalf() {};
 		RiemannSolverType riemann_solver_;
 		void interaction(size_t index_i, Real dt = 0.0);
@@ -197,7 +197,7 @@ namespace SPH
 	class BaseIntegration2ndHalf : public BaseIntegrationInCompressible
 	{
 	public:
-		explicit BaseIntegration2ndHalf(BaseInnerRelation& inner_relation);
+		explicit BaseIntegration2ndHalf(BaseInnerRelation& inner_relation, Real limiter_parameter=5.0);
 		virtual ~BaseIntegration2ndHalf() {};
 		RiemannSolverType riemann_solver_;
 		void interaction(size_t index_i, Real dt = 0.0);

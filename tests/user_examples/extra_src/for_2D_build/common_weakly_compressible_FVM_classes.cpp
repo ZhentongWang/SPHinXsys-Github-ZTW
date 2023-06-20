@@ -13,40 +13,34 @@ namespace SPH
         return 0.1 / (reduced_value + TinyReal);
 	}
 	//=================================================================================================//
-	BaseRelaxationInFVM::BaseRelaxationInFVM(BaseInnerRelationInFVM &inner_relation)
-		: LocalDynamics(inner_relation.getSPHBody()), DataDelegateInnerInFVM<BaseParticles>(inner_relation),
-		fluid_(DynamicCast<WeaklyCompressibleFluid>(this, particles_->base_material_)), p_(*particles_->getVariableByName<Real>("Pressure")), rho_(particles_->rho_), drho_dt_(*particles_->registerSharedVariable<Real>("DensityChangeRate")),
-		vel_(particles_->vel_), mom_(*particles_->getVariableByName<Vecd>("Momentum")),
-		dmom_dt_(*particles_->getVariableByName<Vecd>("MomentumChangeRate")),
-		dmom_dt_prior_(*particles_->getVariableByName<Vecd>("OtherMomentumChangeRate")),
-		pos_(particles_->pos_), mu_(fluid_.ReferenceViscosity()){};
+	BaseForceFromFluidInFVM::BaseForceFromFluidInFVM(BaseInnerRelation& inner_relation)
+		: LocalDynamics(inner_relation.getSPHBody()), fluid_dynamics::FluidDataInner(inner_relation), Vol_(particles_->Vol_) {};
 	//=================================================================================================//
-	BaseForceFromFluidInFVM::BaseForceFromFluidInFVM(BaseInnerRelationInFVM& inner_relation)
-		: LocalDynamics(inner_relation.getSPHBody()), DataDelegateInnerInFVM<BaseParticles>(inner_relation), Vol_(particles_->Vol_) {};
-	//=================================================================================================//
-	ViscousForceFromFluidInFVM::ViscousForceFromFluidInFVM(BaseInnerRelationInFVM& inner_relation)
+	ViscousForceFromFluidInFVM::ViscousForceFromFluidInFVM(BaseInnerRelation& inner_relation, vector<vector<size_t>> each_boundary_type_contact_real_index)
 		: BaseForceFromFluidInFVM(inner_relation), fluid_(DynamicCast<WeaklyCompressibleFluid>(this, particles_->base_material_)), 
-		vel_(particles_->vel_), mu_(fluid_.ReferenceViscosity())
+		vel_(particles_->vel_), mu_(fluid_.ReferenceViscosity()), each_boundary_type_contact_real_index_(each_boundary_type_contact_real_index)
 	{
 		particles_->registerVariable(force_from_fluid_, "ViscousForceFromFluid");
 	};
 	//=================================================================================================//
 	void ViscousForceFromFluidInFVM::interaction(size_t index_i, Real dt)
 	{
-		Real Vol_i = Vol_[index_i];
-		const Vecd &vel_i = vel_[index_i];
-		Vecd force = Vecd::Zero();
-		const NeighborhoodInFVM &inner_neighborhood = inner_configuration_in_FVM_[index_i];
-		for (size_t n = 0; n != inner_neighborhood.current_size_; ++n)
+		for(size_t real_particle_num=0;real_particle_num!=each_boundary_type_contact_real_index_[3].size();++real_particle_num)
 		{
-			if (inner_neighborhood.boundary_type_[n] == 3)
+			Vecd force = Vecd::Zero();
+			const Vecd &vel_i = vel_[index_i];
+			if(index_i==each_boundary_type_contact_real_index_[3][real_particle_num])
 			{
+				Real Vol_i = Vol_[index_i];
+				const Neighborhood &inner_neighborhood = inner_configuration_[index_i];
+				size_t index_j = inner_neighborhood.j_[2];
+
 				Vecd vel_j = -vel_i;
-				Vecd vel_derivative = (vel_j - vel_i) / (inner_neighborhood.r_ij_[n] + TinyReal);
-				force += 2.0 * mu_ * vel_derivative * Vol_i * inner_neighborhood.dW_ijV_j_[n];
+				Vecd vel_derivative = (vel_j - vel_i) / (inner_neighborhood.r_ij_[2] + TinyReal);
+				force += 2.0 * mu_ * vel_derivative * Vol_i * inner_neighborhood.dW_ijV_j_[2];
+				force_from_fluid_[index_i] = force;
 			}
 		}
-		force_from_fluid_[index_i] = force;
 	}
 	//=================================================================================================//
 }

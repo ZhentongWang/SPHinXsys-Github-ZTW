@@ -8,9 +8,9 @@
 #ifndef FVM_DOUBLE_MACH_REFLECTION_H
 #define FVM_DOUBLE_MACH_REFLECTION_H
 #include "common_shared_FVM_classes.h" // shared eulerian classes for weakly-compressible and compressible fluid in FVM.
-#include "common_compressible_FVM_classes.hpp" // eulerian classes for compressible fluid in FVM only.
+#include "common_compressible_FVM_classes.h" // eulerian classes for compressible fluid in FVM only.
 #include "common_shared_eulerian_classes.h" // shared eulerian classes for weakly-compressible and compressible fluid.
-#include "common_compressible_eulerian_classes.h" // eulerian classes for weakly compressible fluid only.
+#include "common_compressible_eulerian_classes.hpp" // eulerian classes for weakly compressible fluid only.
 using namespace SPH;
 using namespace std;
 //----------------------------------------------------------------------
@@ -115,12 +115,12 @@ class DMFInitialCondition
 //----------------------------------------------------------------------
 //	DMFBoundaryConditionSetup
 //----------------------------------------------------------------------
-class DMFBoundaryConditionSetup : public DataDelegateInnerInFVM<BaseParticles>
+class DMFBoundaryConditionSetup : public fluid_dynamics::FluidDataInner
 {
 public:
 	DMFBoundaryConditionSetup(BaseInnerRelationInFVM& inner_relation, vector<vector<size_t>> each_boundary_type_with_all_ghosts_index,
         vector<vector<Vecd>> each_boundary_type_with_all_ghosts_eij_,vector<vector<size_t>> each_boundary_type_contact_real_index): 
-        DataDelegateInnerInFVM<BaseParticles>(inner_relation), 
+        fluid_dynamics::FluidDataInner(inner_relation), 
 		compressible_fluid_(CompressibleFluid(1.0, 1.4)), rho_(particles_->rho_), p_(*particles_->getVariableByName<Real>("Pressure")), 
         Vol_(particles_->Vol_), E_(*particles_->getVariableByName<Real>("TotalEnergy")), vel_(particles_->vel_), 
         mom_(*particles_->getVariableByName<Vecd>("Momentum")), pos_(particles_->pos_), total_ghost_particles_(particles_->total_ghost_particles_),

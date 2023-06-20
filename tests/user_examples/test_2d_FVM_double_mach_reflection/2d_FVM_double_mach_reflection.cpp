@@ -48,8 +48,8 @@ int main(int ac, char *av[])
 	ReduceDynamics<CompressibleAcousticTimeStepSizeInFVM> get_fluid_time_step_size(wave_block);
 	/** Here we introduce the limiter in the Riemann solver and 0 means the no extra numerical dissipation.
 	the value is larger, the numerical dissipation larger*/
-	InteractionWithUpdate<Integration1stHalfHLLCWithLimiterRiemannInFVM> pressure_relaxation(water_block_inner, 100.0);
-	InteractionWithUpdate<Integration2ndHalfHLLCWithLimiterRiemannInFVM> density_relaxation(water_block_inner, 100.0);
+	InteractionWithUpdate<Integration1stHalfHLLCWithLimiterRiemann> pressure_relaxation(water_block_inner, 100.0);
+	InteractionWithUpdate<Integration2ndHalfHLLCWithLimiterRiemann> density_relaxation(water_block_inner, 100.0);
 	BodyStatesRecordingToVtp write_real_body_states(io_environment, sph_system.real_bodies_);
 	//----------------------------------------------------------------------
 	//	Prepare the simulation with case specified initial condition if necessary.

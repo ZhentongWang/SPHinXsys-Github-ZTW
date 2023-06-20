@@ -47,16 +47,16 @@ int main(int ac, char *av[])
 	SimpleDynamics<EulerianWCTimeStepInitialization> initialize_a_fluid_step(water_block);
 	/** Time step size with considering sound wave speed. */
 	ReduceDynamics<WCAcousticTimeStepSizeInFVM> get_fluid_time_step_size(water_block);
-	InteractionDynamics<ViscousAccelerationRiemannInnerInFVM> viscous_acceleration(water_block_inner);
+	InteractionDynamics<WCEulerianViscousAccelerationInner> viscous_acceleration(water_block_inner);
 	/** Here we introduce the limiter in the Riemann solver and 0 means the no extra numerical dissipation.
 	the value is larger, the numerical dissipation larger*/
-	InteractionWithUpdate<Integration1stHalfAcousticRiemannInFVM> pressure_relaxation(water_block_inner, 50.0);
-	InteractionWithUpdate<Integration2ndHalfAcousticRiemannInFVM> density_relaxation(water_block_inner, 50.0);
+	InteractionWithUpdate<Integration1stHalfAcousticRiemann> pressure_relaxation(water_block_inner, 50.0);
+	InteractionWithUpdate<Integration2ndHalfAcousticRiemann> density_relaxation(water_block_inner, 50.0);
 	//----------------------------------------------------------------------
 	//	Compute the force exerted on solid body due to fluid pressure and viscosity
 	//----------------------------------------------------------------------
-	InteractionDynamics<ViscousForceFromFluidInFVM> viscous_force_on_solid(water_block_inner);
-	InteractionDynamics<AllForceAccelerationFromFluid> fluid_force_on_solid_update(water_block_inner, viscous_force_on_solid);
+	InteractionDynamics<ViscousForceFromFluidInFVM> viscous_force_on_solid(water_block_inner,ghost_creation.each_boundary_type_contact_real_index_);
+	InteractionDynamics<AllForceAccelerationFromFluid> fluid_force_on_solid_update(water_block_inner, viscous_force_on_solid,ghost_creation.each_boundary_type_contact_real_index_);
 	//----------------------------------------------------------------------
 	//	Define the methods for I/O operations and observations of the simulation.
 	//----------------------------------------------------------------------
@@ -101,7 +101,7 @@ int main(int ac, char *av[])
 			pressure_relaxation.exec(dt);
 			boundary_condition_setup.resetBoundaryConditions();
 			density_relaxation.exec(dt);
-
+			
 			integration_time += dt;
 			GlobalStaticVariables::physical_time_ += dt;
 			if (number_of_iterations % screen_output_interval == 0)

@@ -106,7 +106,6 @@ public:
                 {
                     size_t ghost_index = each_boundary_type_with_all_ghosts_index_[boundary_type][ghost_number];
                     size_t index_i = each_boundary_type_contact_real_index_[boundary_type][ghost_number];
-                    Vecd e_ij=each_boundary_type_with_all_ghosts_eij_[boundary_type][ghost_number];
                     if (boundary_type == 3)
 					{
 						//non-slip wall boundary

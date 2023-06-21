@@ -33,7 +33,6 @@ namespace SPH
 			{
 				Real Vol_i = Vol_[index_i];
 				const Neighborhood &inner_neighborhood = inner_configuration_[index_i];
-				size_t index_j = inner_neighborhood.j_[2];
 
 				Vecd vel_j = -vel_i;
 				Vecd vel_derivative = (vel_j - vel_i) / (inner_neighborhood.r_ij_[2] + TinyReal);

@@ -214,7 +214,6 @@ namespace SPH
                     if (all_needed_data_from_mesh_file_[index_i][neighbor_index][1] != 2)
                     {
                         mutex_create_ghost_particle_.lock();
-                        size_t check_real = real_particles_bound_;
                         size_t ghost_particle_index = particles_->insertAGhostParticle(index_i);
                         size_t node1_index=all_needed_data_from_mesh_file_[index_i][neighbor_index][2];
                         size_t node2_index=all_needed_data_from_mesh_file_[index_i][neighbor_index][3];
@@ -224,7 +223,6 @@ namespace SPH
 
                         all_needed_data_from_mesh_file_[index_i][neighbor_index][0]=ghost_particle_index +1;
                         ghost_particles_[0].push_back(ghost_particle_index);
-                        size_t position_number=pos_.size();
                         pos_[ghost_particle_index] = ghost_particle_position;
                         mutex_create_ghost_particle_.unlock();
 
@@ -254,8 +252,6 @@ namespace SPH
                         each_boundary_type_contact_real_index_[boundary_type].push_back(index_i);
 
                         //creating the boundary files with ghost eij
-                         size_t interface_node1_index = all_needed_data_from_mesh_file_[index_i][2][2];
-                        size_t interface_node2_index = all_needed_data_from_mesh_file_[index_i][2][3];
                         Vecd interface_area_vector = node1_position - node2_position;
                         Real interface_area_size = interface_area_vector.norm();
                         Vecd unit_vector = interface_area_vector / interface_area_size;

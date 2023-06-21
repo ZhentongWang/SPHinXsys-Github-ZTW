@@ -45,11 +45,11 @@ int main(int ac, char *av[])
 		ghost_creation.each_boundary_type_with_all_ghosts_eij_,ghost_creation.each_boundary_type_contact_real_index_);
 	SimpleDynamics<EulerianCompressibleTimeStepInitialization> initialize_a_fluid_step(wave_block);
 	/** Time step size with considering sound wave speed. */
-	ReduceDynamics<CompressibleAcousticTimeStepSizeInFVM> get_fluid_time_step_size(wave_block);
+	ReduceDynamics<CompressibleAcousticTimeStepSizeInFVM> get_fluid_time_step_size(wave_block,read_mesh_data.max_distance_between_nodes_,0.08);
 	/** Here we introduce the limiter in the Riemann solver and 0 means the no extra numerical dissipation.
 	the value is larger, the numerical dissipation larger*/
-	InteractionWithUpdate<Integration1stHalfHLLCWithLimiterRiemann> pressure_relaxation(water_block_inner, 100.0);
-	InteractionWithUpdate<Integration2ndHalfHLLCWithLimiterRiemann> density_relaxation(water_block_inner, 100.0);
+	InteractionWithUpdate<Integration1stHalfHLLCRiemann> pressure_relaxation(water_block_inner);
+	InteractionWithUpdate<Integration2ndHalfHLLCRiemann> density_relaxation(water_block_inner);
 	BodyStatesRecordingToVtp write_real_body_states(io_environment, sph_system.real_bodies_);
 	//----------------------------------------------------------------------
 	//	Prepare the simulation with case specified initial condition if necessary.

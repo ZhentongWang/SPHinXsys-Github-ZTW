@@ -438,16 +438,31 @@ namespace SPH
 		elements_center_coordinates_.erase(elements_center_coordinates_.begin());
     }
     //=================================================================================================//
- //   void NeighborhoodInFVM::removeANeighbor(size_t neighbor_n) 
-	//{
- //       current_size_--;
- //       j_[neighbor_n] = j_[current_size_];
- //       dW_ijV_j_[neighbor_n] = dW_ijV_j_[current_size_];
- //       r_ij_[neighbor_n] = r_ij_[current_size_];
- //       interface_size_[neighbor_n] = interface_size_[current_size_];
- //       boundary_type_[neighbor_n] = boundary_type_[current_size_];
-	//}
-	////=================================================================================================//
+	void readMeshFile::gerMaximumDistanceBetweenNodes()
+    {
+       vector<Real> all_data_of_distance_between_nodes;
+	   all_data_of_distance_between_nodes.resize(0);
+	   for(size_t element_index=0;element_index!=elements_volumes_.size();++element_index)
+	   {
+		    for (std::vector<std::vector<long unsigned int>>::size_type neighbor = 0; neighbor != cell_lists_[element_index].size(); ++neighbor)
+			{
+				size_t interface_node1_index = cell_lists_[element_index][neighbor][2];
+				size_t interface_node2_index = cell_lists_[element_index][neighbor][3];
+				Vecd node1_position = Vecd(point_coordinates_2D_[interface_node1_index][0], point_coordinates_2D_[interface_node1_index][1]);
+				Vecd node2_position = Vecd(point_coordinates_2D_[interface_node2_index][0], point_coordinates_2D_[interface_node2_index][1]);
+				Vecd interface_area_vector = node1_position - node2_position;
+				Real interface_area_size = interface_area_vector.norm();
+				all_data_of_distance_between_nodes.push_back(interface_area_size);
+			}
+	   }
+	   auto max_distance_iter = std::max_element(all_data_of_distance_between_nodes.begin(), all_data_of_distance_between_nodes.end());
+	   if (max_distance_iter != all_data_of_distance_between_nodes.end())
+	   {
+		   max_distance_between_nodes_ = *max_distance_iter;
+	   }
+	   else {cout << "The array of all distance between nodes is empty " << endl; }
+    }
+    //=================================================================================================//
 	void BaseInnerRelationInFVM::resetNeighborhoodCurrentSize()
 	{
 		parallel_for

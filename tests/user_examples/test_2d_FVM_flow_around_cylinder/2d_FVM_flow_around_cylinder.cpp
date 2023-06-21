@@ -46,12 +46,12 @@ int main(int ac, char *av[])
 		ghost_creation.each_boundary_type_with_all_ghosts_eij_,ghost_creation.each_boundary_type_contact_real_index_);
 	SimpleDynamics<EulerianWCTimeStepInitialization> initialize_a_fluid_step(water_block);
 	/** Time step size with considering sound wave speed. */
-	ReduceDynamics<WCAcousticTimeStepSizeInFVM> get_fluid_time_step_size(water_block);
+	ReduceDynamics<WCAcousticTimeStepSizeInFVM> get_fluid_time_step_size(water_block,read_mesh_data.max_distance_between_nodes_);
 	InteractionDynamics<WCEulerianViscousAccelerationInner> viscous_acceleration(water_block_inner);
 	/** Here we introduce the limiter in the Riemann solver and 0 means the no extra numerical dissipation.
 	the value is larger, the numerical dissipation larger*/
-	InteractionWithUpdate<Integration1stHalfAcousticRiemann> pressure_relaxation(water_block_inner, 50.0);
-	InteractionWithUpdate<Integration2ndHalfAcousticRiemann> density_relaxation(water_block_inner, 50.0);
+	InteractionWithUpdate<Integration1stHalfAcousticRiemann> pressure_relaxation(water_block_inner, 200.0);
+	InteractionWithUpdate<Integration2ndHalfAcousticRiemann> density_relaxation(water_block_inner, 200.0);
 	//----------------------------------------------------------------------
 	//	Compute the force exerted on solid body due to fluid pressure and viscosity
 	//----------------------------------------------------------------------

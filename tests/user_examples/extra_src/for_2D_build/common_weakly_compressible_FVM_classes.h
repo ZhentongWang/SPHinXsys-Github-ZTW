@@ -42,16 +42,19 @@ namespace SPH
         StdLargeVec<Real> &rho_, &p_;
         StdLargeVec<Vecd> &vel_;
         Fluid &fluid_;
+        Real max_distance_between_nodes_;
 
       public:
-        explicit WCAcousticTimeStepSizeInFVM(SPHBody &sph_body);
+        explicit WCAcousticTimeStepSizeInFVM(SPHBody &sph_body, Real max_distance_between_nodes, Real acousticCFL = 0.6);
         virtual ~WCAcousticTimeStepSizeInFVM(){};
         virtual Real outputResult(Real reduced_value) override;
+		Real acousticCFL_;
     };
 
 	/**
 	* @class BaseFluidForceOnSolidInFVM
-	* @brief Base class for computing the forces from the fluid
+	* @brief Base class for computing the forces from the fluid. 
+	* Note that In FVM , we need FluidDataInner class to calculate force between solid and fluid.
 	*/
 	class BaseForceFromFluidInFVM : public LocalDynamics, public fluid_dynamics::FluidDataInner
 	{

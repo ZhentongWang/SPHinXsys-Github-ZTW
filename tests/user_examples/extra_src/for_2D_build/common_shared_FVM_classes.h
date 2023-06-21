@@ -48,23 +48,23 @@ namespace SPH
             full_path_ = full_path;
             getDataFromMeshFile();
             getElementCenterCoordinates();
+            gerMaximumDistanceBetweenNodes();
         };
         virtual ~readMeshFile(){};
 
         void getDataFromMeshFile();
-        //void getNodesOfElementFromCellLists();
         void getElementCenterCoordinates();
+        void gerMaximumDistanceBetweenNodes();
         string full_path_;
         vector<size_t> types_of_boundary_condition_;
         vector<vector<Real>> point_coordinates_2D_;
-        //StdLargeVec<Vec3d> point_coordinates_3D_;
         vector<vector<Real>> point_coordinates;
-        //StdLargeVec<Vec3d> elements_nodes_connection_;
         StdLargeVec<Vecd> elements_center_coordinates_;
         StdLargeVec<Real> elements_volumes_;
         vector<vector<size_t>> elements_nodes_connection_;
         StdLargeVec<Vec3d> elements_neighbors_connection_;
         vector<vector<vector<size_t>>> cell_lists_;
+        double max_distance_between_nodes_;
     };
 
     /**

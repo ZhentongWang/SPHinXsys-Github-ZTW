@@ -4,9 +4,9 @@
 namespace SPH
 {
 	//=================================================================================================//
-	CompressibleAcousticTimeStepSizeInFVM::CompressibleAcousticTimeStepSizeInFVM(SPHBody& sph_body)
+	CompressibleAcousticTimeStepSizeInFVM::CompressibleAcousticTimeStepSizeInFVM(SPHBody& sph_body, Real max_distance_between_nodes, Real acousticCFL)
 		: AcousticTimeStepSize(sph_body), rho_(particles_->rho_), p_(*particles_->getVariableByName<Real>("Pressure")), vel_(particles_->vel_), 
-		compressible_fluid_(CompressibleFluid(1.0, 1.4)) {};
+		compressible_fluid_(CompressibleFluid(1.0, 1.4)), max_distance_between_nodes_(max_distance_between_nodes), acousticCFL_(acousticCFL) {};
 	//=================================================================================================//
 	Real CompressibleAcousticTimeStepSizeInFVM::reduce(size_t index_i, Real dt)
 	{
@@ -15,7 +15,7 @@ namespace SPH
 	//=================================================================================================//
 	Real CompressibleAcousticTimeStepSizeInFVM::outputResult(Real reduced_value)
 	{
-		return 0.0005 / (reduced_value + TinyReal);
+		return acousticCFL_ / Dimensions * max_distance_between_nodes_ / (reduced_value + TinyReal);
 	}
 	//=================================================================================================//
 }

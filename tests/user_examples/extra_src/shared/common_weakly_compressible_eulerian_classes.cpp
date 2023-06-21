@@ -18,10 +18,6 @@ namespace SPH
 		return acousticCFL_ / Dimensions * smoothing_length_min_ / (reduced_value + TinyReal);
 	}
 	//=================================================================================================//
-	/*EulerianViscousAccelerationInner::EulerianViscousAccelerationInner(BaseInnerRelation& inner_relation)
-		: BaseViscousAccelerationInner(inner_relation),
-		dmom_dt_prior_(*particles_->getVariableByName<Vecd>("OtherMomentumChangeRate")) {};*/
-	//=================================================================================================//
 	WCEulerianViscousAccelerationInner::WCEulerianViscousAccelerationInner(BaseInnerRelation& inner_relation)
 		: BaseViscousAccelerationInner(inner_relation),
 		dmom_dt_prior_(*particles_->getVariableByName<Vecd>("OtherMomentumChangeRate")) {};

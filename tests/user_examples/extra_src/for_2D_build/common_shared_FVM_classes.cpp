@@ -3,6 +3,7 @@
 namespace SPH
 {
 //=================================================================================================//
+
 void readMeshFile::getDataFromMeshFile()
 {
     ifstream mesh_file; /*!< \brief File object for the Ansys ASCII mesh file. */
@@ -419,6 +420,7 @@ void readMeshFile::getElementCenterCoordinates()
     }
     elements_volumes_.erase(elements_volumes_.begin());
     elements_center_coordinates_.erase(elements_center_coordinates_.begin());
+    elements_nodes_connection_.erase(elements_nodes_connection_.begin());
 }
 //=================================================================================================//
 void readMeshFile::gerMaximumDistanceBetweenNodes()
@@ -575,5 +577,114 @@ void InnerRelationInFVM::updateConfiguration()
                                get_particle_index_, get_inner_neighbor_);
 }
 //=================================================================================================//
+void BodyStatesRecordingInMeshToVtp::writeWithFileName(const std::string &sequence)
+{
+    for (SPHBody *body : bodies_)
+    {
+        if (body->checkNewlyUpdated())
+        {
+            // TODO: we can short the file name by without using SPHBody
+            std::string filefullpath = io_environment_.output_folder_ + "/SPHBody_" + body->getName() + "_" + sequence + ".vtp";
+            if (fs::exists(filefullpath))
+            {
+                fs::remove(filefullpath);
+            }
+            std::ofstream file(filefullpath.c_str(), std::ios::trunc);
+            // begin of the XML file
+            file << "<?xml version=\"1.0\"?>\n";
+            file << "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\">\n";
+            file << "<PolyData>\n";
+
+            // Write point data
+            file << "<Piece NumberOfPoints=\"" << nodes_coordinates_.size() << "\" NumberOfVerts=\"0\" NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"" << elements_nodes_connection_.size() << "\">\n";
+            file << "<Points>\n";
+            file << "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+
+            size_t total_nodes = nodes_coordinates_.size();
+            for (size_t node = 0; node != total_nodes; ++node)
+            {
+                file << nodes_coordinates_[node][0] << " " << nodes_coordinates_[node][1] << " 0.0\n";
+            }
+            /*for (const auto& point : points) {
+                file << point[0] << " " << point[1] << " 0.0\n";
+            }*/
+
+            file << "</DataArray>\n";
+            file << "</Points>\n";
+
+            // Write face data
+            file << "<Polys>\n";
+            file << "<DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n";
+
+            for (const auto& element : elements_nodes_connection_) {
+                for (const auto& vertex : element) {
+                    file << vertex << " ";
+                }
+                file << "\n";
+            }
+
+            file << "</DataArray>\n";
+            file << "<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n";
+
+            size_t offset = 0;
+            for (const auto& face : elements_nodes_connection_) {
+                offset += face.size();
+                file << offset << " ";
+            }
+
+            file << "\n</DataArray>\n";
+            file << "</Polys>\n";
+
+            // Write face attribute data
+            file << "<CellData>\n";
+            file << "<DataArray type=\"Float64\" Name=\"Density\" NumberOfComponents=\"1\" format=\"ascii\">\n";
+
+            BaseParticles &base_particles = body->getBaseParticles();
+            size_t total_real_particles = base_particles.total_real_particles_;
+            size_t cell_number = elements_nodes_connection_.size();
+            for (size_t cell = 0; cell != total_real_particles; ++cell)
+            {
+                file << base_particles.rho_[cell] << "\n";
+            }
+            /*for (const auto& density : densities) {
+                file << density << "\n";
+            }*/
+
+            //file << "</DataArray>\n";
+            //file << "<DataArray type=\"Float64\" Name=\"Velocity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
+
+            //for (size_t face = 0; face != faces.size(); ++face)
+            //{
+            //    file << velocities[face] << "\n";
+            //}
+            ///*for (const auto& velocity : velocities) {
+            //    file << velocity << "\n";
+            //}*/
+
+            file << "</DataArray>\n";
+            file << "<DataArray type=\"Float64\" Name=\"Pressure\" NumberOfComponents=\"1\" format=\"ascii\">\n";
+
+            for (size_t cell = 0; cell != total_real_particles; ++cell)
+            {
+                file << base_particles.rho_[cell] << "\n";
+            }
+            /*for (const auto& pressure : pressures) {
+                file << pressure << "\n";
+            }*/
+
+            file << "</DataArray>\n";
+            file << "</CellData>\n";
+
+            // Write file footer
+            file << "</Piece>\n";
+            file << "</PolyData>\n";
+            file << "</VTKFile>\n";
+
+            file.close();
+        }
+        body->setNotNewlyUpdated();
+    }
+}
+//=============================================================================================//
 } // namespace SPH
   //=================================================================================================//

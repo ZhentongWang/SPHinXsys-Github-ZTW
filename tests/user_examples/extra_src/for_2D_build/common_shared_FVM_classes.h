@@ -33,6 +33,7 @@
 #include "fluid_body.h"
 #include "fluid_dynamics_inner.h"
 #include "general_dynamics.h"
+#include "io_vtk.h"
 using namespace std;
 namespace SPH
 {
@@ -271,6 +272,26 @@ class GhostCreationFromMesh : public GeneralDataDelegateSimple
             }
         }
     };
+};
+
+/**
+ * @class BodyStatesRecordingInMeshToVtp
+ * @brief  Write files for bodies
+ * the output file is VTK XML format can visualized by ParaView the data type vtkPolyData
+ */
+class BodyStatesRecordingInMeshToVtp : public BodyStatesRecording
+{
+  public:
+    BodyStatesRecordingInMeshToVtp(IOEnvironment &io_environment, SPHBody &body,vector<vector<size_t>> elements_nodes_connection,vector<vector<Real>> nodes_coordinates)
+        : BodyStatesRecording(io_environment, body),elements_nodes_connection_(elements_nodes_connection),nodes_coordinates_(nodes_coordinates){};
+    BodyStatesRecordingInMeshToVtp(IOEnvironment &io_environment, SPHBodyVector bodies,vector<vector<size_t>> elements_nodes_connection,vector<vector<Real>> nodes_coordinates)
+        : BodyStatesRecording(io_environment, bodies),elements_nodes_connection_(elements_nodes_connection),nodes_coordinates_(nodes_coordinates){};
+    virtual ~BodyStatesRecordingInMeshToVtp(){};
+
+  protected:
+    virtual void writeWithFileName(const std::string &sequence) override;
+    vector<vector<size_t>> elements_nodes_connection_;
+    vector<vector<Real>> nodes_coordinates_;
 };
 
 } // namespace SPH

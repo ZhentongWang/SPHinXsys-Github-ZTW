@@ -50,7 +50,7 @@ int main(int ac, char *av[])
     the value is larger, the numerical dissipation larger*/
     InteractionWithUpdate<Integration1stHalfHLLCRiemann> pressure_relaxation(water_block_inner);
     InteractionWithUpdate<Integration2ndHalfHLLCRiemann> density_relaxation(water_block_inner);
-    BodyStatesRecordingToVtp write_real_body_states(io_environment, sph_system.real_bodies_);
+    BodyStatesRecordingInMeshToVtp write_real_body_states(io_environment, sph_system.real_bodies_,read_mesh_data.elements_nodes_connection_,read_mesh_data.point_coordinates_2D_);
     //----------------------------------------------------------------------
     //	Prepare the simulation with case specified initial condition if necessary.
     //----------------------------------------------------------------------
@@ -70,7 +70,7 @@ int main(int ac, char *av[])
     //----------------------------------------------------------------------
     //	First output before the main loop.
     //----------------------------------------------------------------------
-    write_real_body_states.writeToFile(0);
+    write_real_body_states.writeToFile();
     //----------------------------------------------------------------------
     //	Main loop starts here.
     //----------------------------------------------------------------------

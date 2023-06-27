@@ -605,9 +605,6 @@ void BodyStatesRecordingInMeshToVtp::writeWithFileName(const std::string &sequen
             {
                 file << nodes_coordinates_[node][0] << " " << nodes_coordinates_[node][1] << " 0.0\n";
             }
-            /*for (const auto& point : points) {
-                file << point[0] << " " << point[1] << " 0.0\n";
-            }*/
 
             file << "</DataArray>\n";
             file << "</Points>\n";
@@ -646,31 +643,22 @@ void BodyStatesRecordingInMeshToVtp::writeWithFileName(const std::string &sequen
             {
                 file << base_particles.rho_[cell] << "\n";
             }
-            /*for (const auto& density : densities) {
-                file << density << "\n";
-            }*/
-
-            //file << "</DataArray>\n";
-            //file << "<DataArray type=\"Float64\" Name=\"Velocity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
-
-            //for (size_t face = 0; face != faces.size(); ++face)
-            //{
-            //    file << velocities[face] << "\n";
-            //}
-            ///*for (const auto& velocity : velocities) {
-            //    file << velocity << "\n";
-            //}*/
 
             file << "</DataArray>\n";
-            file << "<DataArray type=\"Float64\" Name=\"Pressure\" NumberOfComponents=\"1\" format=\"ascii\">\n";
+            file << "<DataArray type=\"Float64\" Name=\"Velocity\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+
+            for (size_t cell = 0; cell != total_real_particles; ++cell) 
+            {
+                file << base_particles.vel_[cell][0] << " " << base_particles.vel_[cell][1] << " 0.0\n";
+            }
+
+            file << "</DataArray>\n";
+            file << "<DataArray type=\"Float64\" Name=\"Unsorted_ID\" NumberOfComponents=\"1\" format=\"ascii\">\n";
 
             for (size_t cell = 0; cell != total_real_particles; ++cell)
             {
-                file << base_particles.rho_[cell] << "\n";
+                file << base_particles.unsorted_id_[cell] << "\n";
             }
-            /*for (const auto& pressure : pressures) {
-                file << pressure << "\n";
-            }*/
 
             file << "</DataArray>\n";
             file << "</CellData>\n";
